@@ -19,14 +19,16 @@ RSpec.configure do |c|
     else
       file = block.source_location.first
     end
-    host  = File.basename(Pathname.new(file).dirname)
+    dirname = Pathname.new(file).dirname
+    host = File.basename(dirname)
     if c.host != host
       c.ssh.close if c.ssh
-      c.host  = host
-      options = Net::SSH::Config.for(c.host)
-      user    = options[:user] || Etc.getlogin
-      c.ssh   = Net::SSH.start(c.host, user, options)
-      c.os    = backend(Serverspec::Commands::Base).check_os
+      c.host = host
+      ssh_config = File.join(dirname, 'ssh_config')
+      options = Net::SSH::Config.for(c.host, files=[ssh_config])
+      user = options[:user] || Etc.getlogin
+      c.ssh = Net::SSH.start(c.host, user, options)
+      c.os = backend(Serverspec::Commands::Base).check_os
     end
   end
 end
